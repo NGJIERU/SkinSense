@@ -31,7 +31,7 @@ const addItemToCart = async (req, res) => {
 };
 
 const removeItemFromCart = async (req, res) => {
-  const { userId, itemId } = req.body;
+  const { userId, itemId } = req.body;  // Body will be parsed even in DELETE request
   try {
     const cart = await Cart.findOne({ userId });
     if (cart) {
@@ -46,4 +46,29 @@ const removeItemFromCart = async (req, res) => {
   }
 };
 
-module.exports = { getCarts, addItemToCart, removeItemFromCart };
+const updateItemQuantity = async (req, res) => {
+  const { userId, itemId, quantity } = req.body;
+  try {
+    const cart = await Cart.findOne({ userId });
+    if (cart) {
+      const itemIndex = cart.items.findIndex(item => item.itemId === itemId);
+      if (itemIndex > -1) {
+        if (quantity > 0) {
+          cart.items[itemIndex].quantity = quantity;
+        } else {
+          cart.items.splice(itemIndex, 1);
+        }
+        await cart.save();
+        res.status(200).send(cart);
+      } else {
+        res.status(404).send('Item not found in cart');
+      }
+    } else {
+      res.status(404).send('Cart not found');
+    }
+  } catch (err) {
+    res.status(500).send(err);
+  }
+};
+
+module.exports = { getCarts, addItemToCart, removeItemFromCart, updateItemQuantity };
