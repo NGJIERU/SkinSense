@@ -33,8 +33,15 @@ const userSchema = new mongoose.Schema({
     }
 });
 
+// A pre-save middleware that hashes the password before saving it to the database.
 userSchema.pre("save", async function(){
     this.password = await bcrypt.hash(this.password, 12);
 });
 
 module.exports = mongoose.model("User", userSchema);
+
+/* 
+Middleware: Executes functions before certain events (like saving a document) or during the request-response cycle.
+Router: Defines routes and associates them with specific controller functions.
+Controller: Handles the logic for each route, interacts with the database, and sends responses to the client. 
+*/
