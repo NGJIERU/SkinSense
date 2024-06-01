@@ -8,9 +8,6 @@ const {
   clearCart,
 } = require('../controllers/CartController');
 const { cartExists } = require('../middleware/CartMiddleware');
-/* const { userVerification } = require('../middleware/AuthMiddleware');
-
-router.use(userVerification); */
 
 router.post('/', addItemToCart);
 router.delete('/:productName', cartExists, removeItemFromCart);
