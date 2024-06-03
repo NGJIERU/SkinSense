@@ -11,7 +11,8 @@ const imageRoute = require("./routes/ImageRoute");
 const productRoute = require("./routes/ProductRoute");
 const userRoute = require("./routes/UserRoute");
 const messageRoute = require("./routes/MessageRoute")
-const profileRoute = require("./routes/ProfileRoute");
+const profileRoute = require("./routes/ProfileRoute")
+const sellerRoute = require("./routes/SellerRoute")
 const { MONGO_URI, PORT } = process.env;
 const path = require('path'); 
 
@@ -52,6 +53,7 @@ app.use('/uploads', profileRoute);
 app.use("/product", productRoute)
 app.use("/user", userRoute)
 app.use("/chat", messageRoute)
+app.use('/sellers', sellerRoute);
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, '../../frontend/dist')));
