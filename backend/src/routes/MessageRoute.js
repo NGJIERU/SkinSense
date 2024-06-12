@@ -111,29 +111,47 @@ router.post('/newMessage', upload.single('file'), async (req, res) => {
     const filepath = file ? file.replace(/\\/g, "/") : null;
 
     try {
-        const message = new UserMessage({
-            senderName,
-            receiverName,
-            messages: [{
-                content,
-                timestamp,
-                file: filepath
-            }]
+        const token = req.cookies.token;
+        if (!token) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        jwt.verify(token, `${process.env.TOKEN_KEY}`, async (err, data) => {
+            if (err) {
+                return res.status(401).json({ message: "Unauthorized" });
+            }
+
+            const userId = data.id;
+
+            try {
+                const message = new UserMessage({
+                    userID: userId,
+                    senderName,
+                    receiverName,
+                    messages: [{
+                        content,
+                        timestamp,
+                        file: filepath
+                    }]
+                });
+
+                const newMessage = await message.save();
+
+                const lastMessage = newMessage.messages[newMessage.messages.length - 1];
+                const simplifiedMessage = {
+                    senderName,
+                    content: lastMessage.content,
+                    timestamp: lastMessage.timestamp,
+                    file: lastMessage.file
+                };
+
+                res.status(201).json(simplifiedMessage);
+            } catch (err) {
+                res.status(400).json({ message: err.message });
+            }
         });
-
-        const newMessage = await message.save();
-
-        const lastMessage = newMessage.messages[newMessage.messages.length - 1];
-        const simplifiedMessage = {
-            senderName,
-            content: lastMessage.content,
-            timestamp: lastMessage.timestamp,
-            file: lastMessage.file
-        };
-
-        res.status(201).json(simplifiedMessage);
     } catch (err) {
-        res.status(400).json({ message: err.message });
+        res.status(500).json({ message: err.message });
     }
 });
 

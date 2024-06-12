@@ -174,7 +174,8 @@ function ChatRoom({ user, currentUser }) { //user= selecteduser
       const response = await axios.post('http://localhost:4000/chat/newMessage', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
-        }
+        },
+        withCredentials: true 
       });
 
       // Update messages state
