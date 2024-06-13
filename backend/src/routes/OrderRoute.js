@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Order = require('../models/orderModel'); // Adjust the path according to your project structure
+const Order = require('../models/orderModel'); 
 
 // Get orders for a specific user
 router.get('/', async (req, res) => {
@@ -25,7 +25,7 @@ router.post('/', async (req, res) => {
   console.log(`Received order creation request for user: ${userId}`);
 
   try {
-      if (!Array.isArray(items)) {  // Check for `items`
+      if (!Array.isArray(items)) {  
           return res.status(400).json({ message: 'Items must be an array' });
       }
 
@@ -53,7 +53,6 @@ router.post('/', async (req, res) => {
       res.status(500).json({ message: 'Error creating order' });
   }
 });
-
 
 // Update order status
 router.patch('/:orderId', async (req, res) => {

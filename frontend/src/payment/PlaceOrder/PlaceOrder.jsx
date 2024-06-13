@@ -110,42 +110,88 @@ const PlaceOrder = () => {
 
     const handlePlaceOrder = async () => {
         try {
-            if (!Array.isArray(cartItems) || cartItems.length === 0) {
-                throw new Error('Cart items are missing or invalid');
-            }
+          if (!Array.isArray(cartItems) || cartItems.length === 0) {
+            throw new Error('Cart items are missing or invalid');
+          }
+
+          if (!isSaved) {
+            alert('Please save your delivery information first.');
+            return;
+          }
     
-            const deliveryInfo = {
-                firstName,
-                lastName,
-                email,
-                street,
-                city,
-                state,
-                zipCode,
-                country,
-                phone
-            };
-    
-            const orderData = {
-                userId: userId.replace(/"/g, ''),  // Remove quotes if necessary
-                items: cartItems.map(item => ({   // Change `cartItems` to `items`
-                    itemId: item.id,
-                    name: item.name,
-                    price: item.price,
-                    quantity: item.quantity,
-                    img: item.image
-                })),
-                paymentMethod: paymentMethod,
-                deliveryInfo: deliveryInfo
-            };
-    
-            await axios.post('http://localhost:4000/orders', orderData);
-        } catch (error) {
-            console.error('Error placing order:', error);
+          if (!paymentMethod) {
+            alert('Please select a payment method.');
+            return;
+          }
+      
+          const deliveryInfo = {
+            firstName,
+            lastName,
+            email,
+            street,
+            city,
+            state,
+            zipCode,
+            country,
+            phone
+          };
+      
+          const orderData = {
+            userId: userId.replace(/"/g, ''),  // Remove quotes if necessary
+            items: cartItems.map(item => ({   // Change `cartItems` to `items`
+              itemId: item.id,
+              name: item.name,
+              price: item.price,
+              quantity: item.quantity,
+              img: item.image
+            })),
+            paymentMethod: paymentMethod,
+            deliveryInfo: deliveryInfo
+          };
+      
+          // Create the order
+          const response = await fetch('http://localhost:4000/orders', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(orderData),
+          });
+      
+          if (!response.ok) {
+            throw new Error('Failed to create order');
+          }
+      
+          const result = await response.json();
+          console.log('Order created:', result);
+      
+          // Transfer items from cart to seller order
+          const transferResponse = await fetch('http://localhost:4000/sellerorders', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId: orderData.userId }),
+          });
+      
+          if (!transferResponse.ok) {
+            throw new Error('Failed to transfer items to seller order');
+          }
+      
+          const transferResult = await transferResponse.json();
+          console.log('Items transferred to seller order:', transferResult);
+      
+          navigate('/transaction/checkout', { state: { subtotal, cartItems } });
+        } catch (err) {
+          console.error('Error creating order: ', err);
         }
-    };
+      };
 
     const navigateToStripeCheckout = async () => {
+        if (!isSaved) {
+            alert('Please save your delivery information first.');
+            return;
+          }
         const stripe = await stripePromise;
 
         try {
@@ -161,10 +207,6 @@ const PlaceOrder = () => {
                 }))
             };
 
-            if (promoCode) {
-                requestData.couponCode = promoCode;
-            }
-
             const response = await axios.post('http://localhost:4000/api/stripe/create-checkout-session', requestData);
             const { sessionId } = response.data;
 
@@ -179,6 +221,10 @@ const PlaceOrder = () => {
     };
 
     const handlePlaceOrderCashOnDelivery = () => {
+                  if (!isSaved) {
+            alert('Please save your delivery information first.');
+            return;
+          }
         // Your logic for placing the order with cash on delivery goes here
         
         // Show the success Snackbar
@@ -221,7 +267,7 @@ const PlaceOrder = () => {
                 <input type="text" placeholder='Phone' value={phone} onChange={(e) => setPhone(e.target.value)} />
                 <div className="save-button-container">
     <button className='save-button' type="submit" onClick={handlePlaceOrder}>
-        {isSaved ? "Saved" : "Save"}
+        {isSaved ? "Save" : "Saved"}
     </button>
     {showSuccessMessage && <p className="success-message">Saved successfully!</p>}
 </div>
